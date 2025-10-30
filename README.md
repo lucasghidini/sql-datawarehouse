@@ -1,2 +1,2 @@
 # sql-datawarehouse
-Criação de um data warehouse usando MySQL, incluído processo de ETL, modelagem de dados
+Criação de um data warehouse usando SQLserver, incluído processo de ETL, modelagem de dados
