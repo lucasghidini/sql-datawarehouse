@@ -1,4 +1,5 @@
 CREATE OR ALTER PROCEDURE silver.load_silver AS
+
 begin
 	declare @start_time datetime, @end_time datetime, @comeco_time datetime, @final_time datetime;
 	begin try
@@ -112,16 +113,16 @@ begin
 	sls_prd_key,
 	sls_cust_id,
 	case
-		when sls_order_dt = 0 or len(cast(sls_order_dt as nvarchar)) != 8 then null
-		else cast(cast (sls_order_dt as nvarchar) as date)
-	end as sls_order_dt,
+		when sls_order_dt = 0 or len(sls_order_dt) != 8 then null
+		else cast(cast(sls_order_dt as varchar)as date)
+		end as sls_order_dt,
 	case
-		when sls_ship_dt = 0 or len(cast(sls_ship_dt as nvarchar)) != 8 then null
-		else cast(cast (sls_ship_dt as nvarchar) as date)
-	end as sls_ship_dt,
+		when sls_ship_dt = 0 or len(sls_ship_dt) != 8 then null
+		else cast(cast(sls_ship_dt as varchar)as date)
+		end as sls_ship_dt,
 	case
-		when sls_due_dt = 0 or len(cast(sls_due_dt as nvarchar)) != 8 then null
-		else cast(cast (sls_due_dt as nvarchar) as date)
+		when sls_due_dt = 0 or len(sls_due_dt) != 8 then null
+		else cast(cast(sls_due_dt as varchar) as date)
 	end as sls_due_dt,
 	case
 		when sls_sales is null or sls_sales <=0 or sls_sales != sls_quantity * abs(sls_price)
@@ -138,6 +139,41 @@ begin
 	set @end_time = getdate();
 	print '>>Tempo de carregamento: ' + cast(datediff(second, @start_time, @end_time) as nvarchar) + 'segundos';
 	print '>>-------------------';
+
+	
+	print'Carregando as tabelas erp';
+	print'----------------------';
+
+
+	-- carregando a tabela erp_cust_az12
+	set @start_time = getdate();
+	print 'Truncate a tabela silver.erp_cust_az12';
+	truncate table silver.erp_cust_az12;
+	print 'Inserindo dados na: silver.erp_cust_az12';
+	insert into silver.erp_cust_az12(
+	cid,
+	bdate,
+	gen
+	)
+	select
+	case
+		when cid like 'NAS%' then substring(cid, 4, len(cid))
+		else cid
+	end as cid,
+	case
+		when bdate > getdate() then null
+		else bdate
+	end as bdate,
+	case
+		when upper(trim(gen)) in ('F', 'FEMALE') then 'Mulher'
+		when upper(trim(gen)) in ('M', 'MALE') then 'Homen'
+		else 'N/A'
+	end as gen
+	from bronze.erp_cust_az12;
+	set @end_time = getdate();
+	print '>>Tempo de carregamento: ' + cast(datediff(second, @start_time, @end_time) as nvarchar) + 'segundos';
+	print '>>-------------------';
+	
 	
 	end try
 	begin catch
