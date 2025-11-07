@@ -174,7 +174,56 @@ begin
 	print '>>Tempo de carregamento: ' + cast(datediff(second, @start_time, @end_time) as nvarchar) + 'segundos';
 	print '>>-------------------';
 	
-	
+	-- carregando a tabela erp_loc_a101
+	set @start_time = getdate();
+	print 'Truncate a tabela silver.erp_loc_a101';
+	truncate table silver.erp_loc_a101;
+	print 'Inserindo dados na: silver.erp_loc_a101';
+	insert into silver.erp_loc_a101(
+	cid,
+	cntry
+	)
+	select
+	replace (cid, '-', '') as cid,
+	case
+		when trim(cntry) = 'DE' then 'Germany' -- Achei melhor deixar os dados em ingles para evitar muitas transformações
+		when trim(cntry) in ('US', 'USA') then 'United States'
+		when trim(cntry) = '' or cntry is null then 'n/a'
+		else cntry
+	end as cntry
+	from bronze.erp_loc_a101
+	set @end_time = getdate();
+	print '>>Tempo de carregamento: ' + cast(datediff(second, @start_time, @end_time) as nvarchar) + 'segundos';
+	print '>>-------------------';
+
+	-- carregando a tabela erp_px_cat_g1v2
+	set @start_time = getdate();
+	print 'Truncate a tabela silver.erp_px_cat_g1v2';
+	truncate table silver.erp_px_cat_g1v2;
+	print 'Inserindo dados na: silver.erp_px_cat_g1v2';
+	insert into silver.erp_px_cat_g1v2(
+	id,
+	cat,
+	subcat,
+	maintenance
+	)
+	select
+	id,
+	cat,
+	subcat,
+	maintenance
+	from bronze.erp_px_cat_g1v2
+	set @end_time = getdate();
+	print '>>Tempo de carregamento: ' + cast(datediff(second, @start_time, @end_time) as nvarchar) + 'segundos';
+	print '>>-------------------';
+
+	set @final_time = getdate()
+	print'======================';
+	print'Fim do carregamento da camada Silver';
+	print'======================';
+	print ' - Tempo total de caregamento ' + cast(datediff(second, @comeco_time, @final_time) as nvarchar) + ' segundos';
+	print'======================';
+
 	end try
 	begin catch
 		print 'Erro ao carregar os dados da camada Bronze';
