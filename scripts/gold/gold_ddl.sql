@@ -1,4 +1,12 @@
--- camada gold
+/*
+	Esse script contem a criação das visualizações da gamada gold no data warehouse
+	Cada visualização realiza trasnformações e combina dados da camada silver para
+	produzir dados limpos e prontos para serem usados.
+*/
+
+
+-- Criação da visualição dim_clientes
+
 create view gold.dim_clientes as 
 select
 	row_number () over(order by cst_id) as cliente_chave,
@@ -19,3 +27,22 @@ from silver.crm_cust_info ci
 on ci.cst_key = ca.cid
 	left join silver.erp_loc_a101 la
 on ci.cst_key = la.cid
+go
+
+-- Criação da visualização dim_produtos
+create view gold.dim_produtos as
+select
+	ip.prd_id as id_produto,
+	ip.prd_key as chave_produto,
+	ip.prd_nm as nome_produto,
+	ip.cat_id as id_categoria,
+	pr.cat as categoria,
+	pr.subcat as subcategoria,
+	pr.maintenance manuntençao,
+	ip.prd_cost as custo,
+	ip.prd_line as linha,
+	ip.prd_start_dt as data_inicial
+from silver.crm_prd_info ip 
+	left join silver.erp_px_cat_g1v2 pr
+on ip.cat_id = pr.id
+where ip.prd_end_dt is null
