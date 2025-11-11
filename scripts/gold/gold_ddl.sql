@@ -11,10 +11,9 @@ if object_id('gold.dim_clientes', 'V') is not null
 go
 
 
-
 create view gold.dim_clientes as 
 select
-	row_number () over(order by cst_id) as cliente_chave,
+	row_number () over(order by cst_id) as chave_cliente,
 	ci.cst_id as cliente_id,
 	ci.cst_key as numero_cliente,
 	ci.cst_fistname as primeiro_nome,
@@ -34,16 +33,18 @@ on ci.cst_key = ca.cid
 on ci.cst_key = la.cid
 go
 
+
 -- Criação da visaulização dim_produtos]
 if object_id('gold.dim_produtos', 'V') is not null
 	drop view gold.dim_produtos;
 go
 
+
 create view gold.dim_produtos as
 select
-	row_number () over(order by ip.prd_start_dt, ip.prd_id) as produto_chave,
+	row_number () over(order by ip.prd_start_dt, ip.prd_id) as chave_produto,
 	ip.prd_id as id_produto,
-	ip.prd_key as chave_produto,
+	ip.prd_key as numero_produto,
 	ip.prd_nm as nome_produto,
 	ip.cat_id as id_categoria,
 	pr.cat as categoria,
@@ -56,5 +57,30 @@ from silver.crm_prd_info ip
 	left join silver.erp_px_cat_g1v2 pr
 on ip.cat_id = pr.id
 where ip.prd_end_dt is null
+go
 
 
+-- criando a visualização gold.fato_vendas
+if object_id('gold.fato_vendas', 'V') is not null
+	drop view gold.fato_vendas;
+go
+
+
+create view gold.fato_vendas as
+select 
+	sd.sls_ord_num as numero_pedido,
+	pr.chave_produto,
+	cl.chave_cliente,
+    sd.sls_order_dt as data_pedido,
+    sd.sls_ship_dt as data_envio,
+    sd.sls_due_dt as data_vencimento,
+    sd.sls_sales as valor_vendas,
+    sd.sls_quantity as quantidade,
+    sd.sls_price as preco
+from silver.crm_sales_details sd
+left join gold.dim_produtos pr
+on sd.sls_prd_key = pr.numero_produto
+left join gold.dim_clientes cl
+on sd.sls_cust_id = cl.cliente_id
+
+go
