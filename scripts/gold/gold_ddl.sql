@@ -6,6 +6,11 @@
 
 
 -- Criação da visualição dim_clientes
+if object_id('gold.dim_clientes', 'V') is not null
+	drop view gold.dim_clientes;
+go
+
+
 
 create view gold.dim_clientes as 
 select
@@ -29,9 +34,14 @@ on ci.cst_key = ca.cid
 on ci.cst_key = la.cid
 go
 
--- Criação da visualização dim_produtos
+-- Criação da visaulização dim_produtos]
+if object_id('gold.dim_produtos', 'V') is not null
+	drop view gold.dim_produtos;
+go
+
 create view gold.dim_produtos as
 select
+	row_number () over(order by ip.prd_start_dt, ip.prd_id) as produto_chave,
 	ip.prd_id as id_produto,
 	ip.prd_key as chave_produto,
 	ip.prd_nm as nome_produto,
@@ -46,3 +56,5 @@ from silver.crm_prd_info ip
 	left join silver.erp_px_cat_g1v2 pr
 on ip.cat_id = pr.id
 where ip.prd_end_dt is null
+
+
